@@ -1,0 +1,87 @@
+pog:
+  # data_path: 'D:\DS-KT\Bundle_data\datasets'
+  # data_path: './datasets'
+  # data_path: '/kaggle/input/cate-train/datasets'
+  data_path: '/content/drive/MyDrive/datasets/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 1024 # the batch size for testing
+  topk: [5, 10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-3] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  n_head: 3
+  seed: 2023
+  self_loop: False
+  print_mask_debug: False
+  extra_layer: True
+  epochs: 100 # number of epochs to train
+  test_interval: 5 # by how many epochs to run the validation and testing.
+
+pog_dense:
+  data_path: '/content/drive/MyDrive/datasets/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 1024 # the batch size for testing
+  topk: [5, 10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-3] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  epochs: 100 # number of epochs to train
+  test_interval: 5 # by how many epochs to run the validation and testing.
+
+spotify:
+  data_path: '/kaggle/input/bundle-construction/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 256 # the batch size for testing
+  topk: [10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-3] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  epochs: 100 # number of epochs to train # default: 100
+  test_interval: 5 # by how many epochs to run the validation and testing.
+
+spotify_sparse:
+  data_path: '/kaggle/input/bundle-construction/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 256 # the batch size for testing
+  topk: [10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-3] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  epochs: 100 # number of epochs to train # default: 100
+  test_interval: 5 # by how many epochs to run the validation and testing.
+
+food:
+  data_path: '/content/drive/MyDrive/datasets/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 1024 # the batch size for testing
+  topk: [5, 10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-4] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  print_mask_debug: False
+  epochs: 50 # number of epochs to train
+  test_interval: 5 # by how many epochs to run the validation and testing.
+
+electronic:
+  data_path: '/content/drive/MyDrive/datasets/'
+  batch_size_train: 256 # the batch size for training
+  batch_size_test: 1024 # the batch size for testing
+  topk: [5, 10, 20, 40, 80] # the topks metrics for evaluation
+  neg_num: 1 # number of negatives used for BPR loss. All the experiments use 1.
+  embedding_sizes: [64] # the embedding size for user, bundle, and item
+  num_layerss: [1] # number of layers for the infomation progagation over the item- and bundle-level graphs
+  lrs: [1.0e-4] # learning rate
+  l2_regs: [1.0e-5] # the l2 regularization weight: lambda_2
+  print_mask_debug: False
+  epochs: 50 # number of epochs to train
+  test_interval: 5 # by how many epochs to run the validation and testing.
