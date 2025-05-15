@@ -273,7 +273,7 @@ class CaRo(nn.Module):
         elif self.item_augmentation in ["FN"]:
             self.noise_weight = conf['noise_weight']
 
-        self.get_cate_embbed(True)
+        self.get_cate_embbed(False)
         dense_ic = self.convert_sparse(self.ic_graph)
         self.item_cate_feat = dense_ic @ self.cate_feature
     def convert_sparse(self, sparse):
