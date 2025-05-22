@@ -265,15 +265,15 @@ class LightGCN(nn.Module):
         D_inv_sqrt = sp.diags(d_inv_sqrt)
         A_norm = D_inv_sqrt.dot(A).dot(D_inv_sqrt)
 
-        def forward(self):
-            all_embeddings = torch.cat([self.item_embedding, self.cate_embedding], dim = 0)
-            embeddings = [all_embeddings]
+    def forward(self):
+        all_embeddings = torch.cat([self.item_embedding, self.cate_embedding], dim = 0)
+        embeddings = [all_embeddings]
 
-            for _ in range(self.n_layers):
-                all_embeddings =  torch.sparse.mm(self.graph, all_embeddings)
-                embeddings.append(all_embeddings)
-            final_emb = torch.stack(embeddings, dim = 0).mean(dim = 0)
-            return final_emb[:self.item_embedding.shape[0]]
+        for _ in range(self.n_layers):
+            all_embeddings =  torch.sparse.mm(self.graph, all_embeddings)
+            embeddings.append(all_embeddings)
+        final_emb = torch.stack(embeddings, dim = 0).mean(dim = 0)
+        return final_emb[:self.item_embedding.shape[0]]
 
 class CaRo(nn.Module):
     def __init__(self, conf, raw_graph, features):
