@@ -234,6 +234,46 @@ class HierachicalEncoder(nn.Module):
 
         return random_mask(), random_mask()
 
+class LightGCN(nn.Module):
+    def __init__(self, num_items, num_cates, embedding_size, ic_graph, n_layers = 2, device = 'cuda'):
+        super().__init__()
+        self.embedding_size = embedding_size
+        self.device = device
+        self.n_layers = n_layers
+        self.num_items = num_items
+        self.num_cates = num_cates
+        self.init_emb()
+        
+    def init_emb(self):
+        self.cate_embedding = nn.Parameter(torch.FloatTensor(self.num_cates, self.embedding_size)).to(self.device)
+        nn.init.xavier_normal_(self.cate_embedding)
+        self.item_embedding = nn.Parameter(torch.FloatTensor(self.num_items, self.embedding_size)).to(self.device)
+        nn.init.xavier_normal_(self.item_embedding)
+    def build_symmetric_adj(self, ic_graph, num_items, num_cates):
+        A_ic = ic_graph.T
+        A_ci = ic_graph
+        
+        #symmetric adjacency
+        top = sp.hstack[sp.scr_matrix((num_items,num_items)), A_ic]
+        bottom = sp.hstack[A_ci,sp.scr_matrix((num_cates,num_cates))]
+        A = sp.vstack([top, bottom])
+
+        #normalize
+        row_sum = np.array(A.sum(1)).flatten()
+        d_inv_sqrt =np.power(row_sum, -0.5)
+        d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0
+        D_inv_sqrt = sp.diags(d_inv_sqrt)
+        A_norm = D_inv_sqrt.dot(A).dot(D_inv_sqrt)
+
+        def forward(self):
+            all_embeddings = torch.cat([self.item_embedding, self.cate_embedding], dim = 0)
+            embeddings = [all_embeddings]
+
+            for _ in range(self.n_layers):
+                all_embeddings =  torch.sparse.mm(self.graph, all_embeddings)
+                embeddings.append(all_embeddings)
+            final_emb = torch.stack(embeddings, dim = 0).mean(dim = 0)
+            return final_emb[:self.item_embedding.shape[0]]
 
 class CaRo(nn.Module):
     def __init__(self, conf, raw_graph, features):
@@ -276,6 +316,8 @@ class CaRo(nn.Module):
         self.get_cate_embbed(False)
         dense_ic = self.convert_sparse(self.ic_graph)
         self.item_cate_feat = dense_ic @ self.cate_feature
+        self.lightgcn = LightGCN(num_items=self.num_item,num_cates = self.num_cate, embedding_size= self.embedding_size, ic_graph = self.ic_graph, device = self.device )
+
     def convert_sparse(self, sparse):
         dense_mat = sparse.toarray()
         dense_tensor= torch.tensor(dense_mat)
@@ -311,6 +353,12 @@ class CaRo(nn.Module):
 
         # compute loss >>>
         logits = bundle_feature @ feat_retrival_view.transpose(0, 1)
+
+        #item cate lightgcn
+        item_features_cate = self.lightgcn()
+        prediction = bundle_feature@item_features_cate.T
+        logits += prediction 
+
         loss = recon_loss_function(logits, full)  # main_loss
 
         # # item-level contrastive learning >>>
@@ -352,9 +400,10 @@ class CaRo(nn.Module):
 
         feat_retrival_view = self.decoder(
             (idx, x, seq_x, None, None), all=True)
-       
+        item_feature_cate = self.lightgcn()
+        prediction = bundle_feature@item_feature_cate.T 
         logits = bundle_feature @ feat_retrival_view.transpose(0, 1)
-
+        logits += prediction
         return logits
 
     def propagate(self, test=False):
