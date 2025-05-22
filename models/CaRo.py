@@ -243,7 +243,7 @@ class LightGCN(nn.Module):
         self.num_items = num_items
         self.num_cates = num_cates
         self.init_emb()
-        
+        self.graph = self.build_symmetric_adj(ic_graph, num_items, num_cates).to(self.device)
     def init_emb(self):
         self.cate_embedding = nn.Parameter(torch.FloatTensor(self.num_cates, self.embedding_size)).to(self.device)
         nn.init.xavier_normal_(self.cate_embedding)
@@ -254,8 +254,8 @@ class LightGCN(nn.Module):
         A_ci = ic_graph
         
         #symmetric adjacency
-        top = sp.hstack[sp.scr_matrix((num_items,num_items)), A_ic]
-        bottom = sp.hstack[A_ci,sp.scr_matrix((num_cates,num_cates))]
+        top = sp.hstack([sp.csr_matrix((num_items,num_items)), A_ic])
+        bottom = sp.hstack([A_ci,sp.csr_matrix((num_cates,num_cates))])
         A = sp.vstack([top, bottom])
 
         #normalize
@@ -264,6 +264,13 @@ class LightGCN(nn.Module):
         d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0
         D_inv_sqrt = sp.diags(d_inv_sqrt)
         A_norm = D_inv_sqrt.dot(A).dot(D_inv_sqrt)
+        # Convert to PyTorch sparse tensor
+        A_norm = A_norm.tocoo()
+        indices = torch.LongTensor(np.vstack((A_norm.row, A_norm.col)))
+        values = torch.FloatTensor(A_norm.data)
+        shape = torch.Size(A_norm.shape)
+
+        return torch.sparse.FloatTensor(indices, values, shape)
 
     def forward(self):
         all_embeddings = torch.cat([self.item_embedding, self.cate_embedding], dim = 0)
@@ -316,7 +323,7 @@ class CaRo(nn.Module):
         self.get_cate_embbed(False)
         dense_ic = self.convert_sparse(self.ic_graph)
         self.item_cate_feat = dense_ic @ self.cate_feature
-        self.lightgcn = LightGCN(num_items=self.num_item,num_cates = self.num_cate, embedding_size= self.embedding_size, ic_graph = self.ic_graph, device = self.device )
+        self.lightgcn = LightGCN(num_items=self.num_item,num_cates = self.num_cate, embedding_size= self.embedding_size, ic_graph = self.ic_graph.T, device = self.device )
 
     def convert_sparse(self, sparse):
         dense_mat = sparse.toarray()
@@ -400,10 +407,10 @@ class CaRo(nn.Module):
 
         feat_retrival_view = self.decoder(
             (idx, x, seq_x, None, None), all=True)
-        item_feature_cate = self.lightgcn()
-        prediction = bundle_feature@item_feature_cate.T 
         logits = bundle_feature @ feat_retrival_view.transpose(0, 1)
-        logits += prediction
+        item_features_cate = self.lightgcn()
+        prediction = bundle_feature@item_features_cate.T
+        logits += prediction 
         return logits
 
     def propagate(self, test=False):
